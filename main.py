@@ -16,26 +16,28 @@ class Space:
 # Params: lastPostion Tuple(x, y), nextPosition Tuple(x, y), action = String
 # return: P(X_i | X_{i-1}) according to transition model
 def TransitionModel(lastPostion, nextPosition, action):
+    print('Evaluating with Transition Model: lastPos: {}, nextPos: {}, action: {}'.format(lastPostion, nextPosition, action))
+    
     if (lastPostion == nextPosition):
         return 0.1
     else:
         if(action == 'up'):
-            if(nextPosition[1] + 1 == lastPostion[1]):
+            if(nextPosition[0] == lastPostion[0] + 1 and nextPosition[1] == lastPostion[1]):
                 return 0.9
             else:
                 return 0
         elif(action == 'down'):
-            if(nextPosition[1] - 1 == lastPostion[1]):
+            if(nextPosition[0] == lastPostion[0] - 1 and nextPosition[1] == lastPostion[1]):
                 return 0.9
             else:
                 return 0
         elif(action == 'left'):
-            if(nextPosition[0] - 1 == lastPostion[0]):
+            if(nextPosition[1] == lastPostion[1] - 1 and nextPosition[0] == lastPostion[0]):
                 return 0.9
             else:
                 return 0
         elif(action == 'right'):
-            if(nextPosition[0] + 1 == lastPostion[0]):
+            if(nextPosition[1] == lastPostion[1] + 1 and nextPosition[0] == lastPostion[0]):
                 return 0.9
             else:
                 return 0
@@ -57,6 +59,29 @@ def main():
              ['N', 'N', 'N'],
              ['N', 'B', 'H']]
     
+    # Something wrong in calculation
+    def Normalize2D(distribution):
+        total = 0
+        for line in distribution:
+            total += sum(line)
+        alpha = 1 / total
+        print('total: {}'.format(total))
+        
+        normDist = []
+        for line in distribution:
+            newLine = []
+            for value in line:
+                newVal = alpha * value
+                newLine.append(newVal)
+            normDist.append(newLine)  
+
+        print('Before Normalize:')
+        print(distribution)
+        print('After Normalize:')
+        print(normDist)
+        
+        return normDist
+    
     # Calculates Filtering for iteration i
     # Params: i Int: number of iterations
     # Return: Probabiltiy Distribution for iteration i
@@ -75,16 +100,24 @@ def main():
         for x in range(1,4):
             for y in range(1,4):
                 position = (x, y)
-                pObserve = observationModel[sensorData[i-1]][myMap[x-1][y-1]]
+                probAtPos = observationModel[sensorData[i-1]]
+                pObserve = probAtPos[myMap[x-1][y-1]]
+                print('Position Reading : {}\n At Position: {}\nProbability:{}'.format(sensorData[i-1], position, pObserve))
                 summation = 0
                 for x2 in range(1,4):
                     for y2 in range(1,4):
                         # Issue filter recalculated  everytime we want 1 value
-                        summation += TransitionModel((x2, y2), (x, y), actions[i-1]) * filterRes[x2-1][y2-1]
+                        transitionVal = TransitionModel((x2, y2), (x, y), actions[i-1]) * filterRes[x2-1][y2-1]
+                        print('Transition Model * Filtering: {}'.format((transitionVal, actions[i-1])))
+                        summation += transitionVal
+                print('Summation after iteration: {} : {}'.format(i, summation))
                 result[x - 1].append(pObserve * summation)
-        return result
+                
+        res = Normalize2D(result)
+        return res
     
-    res = Filter(1)
+    res = Filter(2)
+    print('------------ FILTERING ANSWER --------------\n')
     for line in res:
         print(line)
     
