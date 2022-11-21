@@ -22,12 +22,12 @@ def TransitionModel(lastPostion, nextPosition, action):
         return 0.1
     else:
         if(action == 'up'):
-            if(nextPosition[0] == lastPostion[0] + 1 and nextPosition[1] == lastPostion[1]):
+            if(nextPosition[0] == lastPostion[0] - 1 and nextPosition[1] == lastPostion[1]):
                 return 0.9
             else:
                 return 0
         elif(action == 'down'):
-            if(nextPosition[0] == lastPostion[0] - 1 and nextPosition[1] == lastPostion[1]):
+            if(nextPosition[0] == lastPostion[0] + 1 and nextPosition[1] == lastPostion[1]):
                 return 0.9
             else:
                 return 0
@@ -116,7 +116,7 @@ def main():
         res = Normalize2D(result)
         return res
     
-    res = Filter(2)
+    res = Filter(3)
     print('------------ FILTERING ANSWER --------------\n')
     for line in res:
         print(line)
