@@ -58,7 +58,7 @@ def main():
              ['N', 'B', 'H']]
     
     # Calculates Filtering for iteration i
-    # Params:
+    # Params: i Int: number of iterations
     # Return: Probabiltiy Distribution for iteration i
     # Ex: [0.2, 0.23, 0.42,
     # 0.02, 0.023, 0.42,
