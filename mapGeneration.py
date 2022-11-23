@@ -83,22 +83,44 @@ def SelectStart(myMap):
 # Return: sequence of 100 actions randomly selected from the list
 def GenerateActions(possibleActions):
     genActions = []
+    for i in range(100):
+        genActions.append(random.choice(possibleActions))
     return genActions
 
 # Applys Transition Model to get the next position of the agent
 # Params: currentState: Tuple(x, y), action: String
 # Return: nextState: Tuple(x, y) postion of the agent after applying model
-def GetNextState(currentState, action):
-
+def GetNextState(currentState, action, myMap):
     nextState = (0, 0)
+    rVal = random.random()
+    if (rVal < 0.9):
+        if(action == 'U'):
+            nextState = (currentState[0] - 1, currentState[1])
+        elif(action == 'D'):
+            nextState = (currentState[0] + 1, currentState[1])
+        elif(action == 'L'):
+            nextState = (currentState[0], currentState[1] - 1)
+        elif(action == 'R'):
+            nextState = (currentState[0], currentState[1] + 1)
+    else:
+        return currentState
+    
+    if (nextState[0] < 0 or nextState[0] > M - 1):
+        return currentState
+    elif (nextState[1] < 0 or nextState[1] > N - 1):
+        return currentState
+    
+    if (myMap[nextState[0]][nextState[1]] == 'B'):
+        return currentState
+        
     return nextState
 
 # Applys Observation Model to get the sensor reading of the agent's position
 # Params: currentState: Tuple(x, y)
 # Return: reading: String -> sensor reading {N, H, T}
 def GetSensorReading(currentState):
-    
     nextState = (0, 0)
+    
     return nextState
 
 # Prints a given 2D array row by row
@@ -111,11 +133,12 @@ def main():
     myMap = CreateMap()
     PrintMap(myMap)
     x0 = SelectStart(myMap)
-    print(x0)
+    # print(x0)
     
     # TODO
-    GenerateActions(['U', 'L', 'D', 'R'])
-    GetNextState((0, 0), 'U')
+    actionsTaken = GenerateActions(['U', 'L', 'D', 'R'])
+    newState = GetNextState((0, 0), 'R', myMap)
+    print(newState)
     GetSensorReading((0,0))
     return
 
