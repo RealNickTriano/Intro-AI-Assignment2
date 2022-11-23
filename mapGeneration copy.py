@@ -19,8 +19,8 @@ Rules:
 """
 
 # GLOBAL VARIABLES
-M = 100
-N = 50
+M = 10
+N = 10
 TYPES = {'N': 0.5, 'H': 0.2, 'T': 0.2, 'B': 0.1}
 
 # IMPORTANT: COORDINATES ARE IN (ROW, COL) FORMAT
@@ -116,14 +116,14 @@ def GetNextState(currentState, action, myMap):
     
     if (myMap[nextState[0]][nextState[1]] == 'B'):
         return currentState
-    
+        
     return nextState
 
 # Applys Observation Model to get the sensor reading of the agent's position
 # Params: currentState: Tuple(x, y)
 # Return: reading: String -> sensor reading {N, H, T}
 def GetSensorReading(currentState,myMap):
-    locationX,locationY = currentState
+    locationX,locationY=currentState
     reading=myMap[locationX][locationY]
     return reading
 
@@ -154,7 +154,7 @@ def main():
 
 #We need to use 10 maps 10 times so this first loop should itterate
     fileselector=0
-    for m in range(10):
+    for m in range(1):
         myMap=mapStorage[m]
         #PrintMap(myMap)
         print("current map=")
@@ -165,19 +165,21 @@ def main():
         currentState=x0
         """ mvmtList=[0 for p in range(100)]
         mvmtList[0]=x0 """
-        for a in range(10):
+        newState = currentState
+        for a in range(1):
             sensorList=[]
             stateList = []
             actionList = GenerateActions(['U', 'L', 'D', 'R'])
             stateList.append(currentState)
-            newState = currentState
-            for x in range(100):
+            print("Start State: {}".format(currentState))
+            for x in range(10):
                 #mvmtList[x]=currentState
                 """ actionsTaken=actionStorage[x] """
                 newState = GetNextState(newState, actionList[x], myMap)
                 stateList.append(newState)
                 currentReading = GetSensorReading(newState, myMap)
                 sensorList.append(currentReading)
+                print("Next State: {}, Sensor Reading: {}, Action: {}".format(newState, currentReading, actionList[x]))
             filename="map_" + str(m + 1) + "path_" + str(a + 1) + ".txt"
             WriteToFile(x0, myMap, actionList, sensorList, stateList, filename)
     PrintMap(mapStorage[0])
