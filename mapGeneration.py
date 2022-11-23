@@ -1,4 +1,5 @@
 import random
+import os.path
 """
 Rules:
     Large maps: 100 by 50
@@ -25,7 +26,11 @@ TYPES = {'N': 0.5, 'H': 0.2, 'T': 0.2, 'B': 0.1}
 # IMPORTANT: COORDINATES ARE IN (ROW, COL) FORMAT
 
 # Creates file and writes information in specified format
-def WriteToFile(initialPoint, groundStates, actions, groundSensors):
+def WriteToFile(initialPoint, groundStates, actions, groundSensors,filename):
+    content=str(initialPoint)+ '\n' +str(groundStates)+'\n' +str(actions)+'\n' +str(groundSensors)
+    dest = filename
+    f = open(dest, "w")
+    f.write(content) 
     return 1
 
 # Creates 2D array of size 100 x 50. 
@@ -118,10 +123,10 @@ def GetNextState(currentState, action, myMap):
 # Applys Observation Model to get the sensor reading of the agent's position
 # Params: currentState: Tuple(x, y)
 # Return: reading: String -> sensor reading {N, H, T}
-def GetSensorReading(currentState):
-    nextState = (0, 0)
-    
-    return nextState
+def GetSensorReading(currentState,myMap):
+    locationX,locationY=currentState
+    reading=myMap[locationX][locationY]
+    return reading
 
 # Prints a given 2D array row by row
 def PrintMap(myMap):
@@ -130,16 +135,60 @@ def PrintMap(myMap):
     return
 
 def main():
-    myMap = CreateMap()
+    #generate list of maps
+    mapStorage=[0 for j in range(10)]
+    for k in range(10):
+        mapStorage[k]= CreateMap()
+        """ print(mapStorage[k])
+        print() """
+    """ myMap = CreateMap()
     PrintMap(myMap)
     x0 = SelectStart(myMap)
+    currentState=x0
+    sensorList=[] """
     # print(x0)
-    
+    #generate list of actions
+    actionStorage=[0 for j in range(100)]
+    for i in range(100):
+        actionsTaken=GenerateActions(['U', 'L', 'D', 'R'])
+        actionStorage[i]=actionsTaken
+
+#We need to use 10 maps 10 times so this first loop should itterate
+    fileselector=0
+    for m in range(10):
+        myMap=mapStorage[m]
+        #PrintMap(myMap)
+        print("current map=")
+        print(m)
+        x0 = SelectStart(myMap)
+        print("starting location =")
+        print(x0)
+        currentState=x0
+        mvmtList=[0 for p in range(100)]
+        mvmtList[0]=x0
+        for a in range(10):
+            sensorList=[]
+            for x in range(100):
+                mvmtList[x]=currentState
+                actionsTaken=actionStorage[x]
+                newState = GetNextState(currentState, actionsTaken[x], myMap)
+                currentState=newState
+                currentreading=GetSensorReading(currentState,myMap)
+                sensorList.append(currentreading)
+            filename="mvmt_" + str(fileselector)+".txt"
+            WriteToFile(x0,myMap,actionsTaken,sensorList,filename)
+            fileselector=fileselector+1
+    PrintMap(mapStorage[0])
     # TODO
-    actionsTaken = GenerateActions(['U', 'L', 'D', 'R'])
-    newState = GetNextState((0, 0), 'R', myMap)
-    print(newState)
-    GetSensorReading((0,0))
+    """ actionsTaken = GenerateActions(['U', 'L', 'D', 'R'])
+    for i in range(100):
+        newState = GetNextState(currentState, actionsTaken[i], myMap)
+        print(newState)
+        currentState=newState
+        currentreading=GetSensorReading(currentState,myMap)
+        sensorList.append(currentreading)
+        print(GetSensorReading(currentState,myMap))
+        WriteToFile(x0,myMap,actionsTaken,sensorList) """
     return
 
 if __name__ == "__main__":
