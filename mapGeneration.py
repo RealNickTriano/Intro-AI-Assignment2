@@ -137,7 +137,10 @@ def main():
     #generate list of maps
     mapStorage=[0 for j in range(10)]
     for k in range(10):
-        mapStorage[k]= CreateMap()
+        mapStorage[k] = CreateMap()
+        content = str(mapStorage[k]) 
+        f = open("map_" + str(k + 1) + ".txt", "w")
+        f.write(content) 
         """ print(mapStorage[k])
         print() """
     """ myMap = CreateMap()

@@ -1,10 +1,12 @@
 import os
 from generalFilter import *
+from ast import literal_eval
 
 
 # Folder Path
 CUR_DIR = os.getcwd()
 PATHS_FOLDER = CUR_DIR + '\GroundTruths'
+MAPS_FOLDER = CUR_DIR + '\Maps'
 M = 100
 N = 50
 
@@ -53,18 +55,27 @@ def main():
     # Loop 10 times for each map
     #for i in range(10):
     # Load map from file: 2D array of H, N, T, B strings
-    myMap = [] # Store map here
+    filename = MAPS_FOLDER + '\map_' + str(1) + '.txt'
+    items = []
+    with open(filename, 'r') as f1:
+        readData = f1.read()
+        
+    # If file did not close something went wrong
+    if (not f1.closed):
+        return -1
+    
+    myMap = literal_eval(readData)
     
     # Loop 10 times for each path
     #for k in range(10):
     filename = PATHS_FOLDER + '\map_' + str(1) + 'path_' + str(1) + '.txt'
     # Load ground truth file
-    with open(filename) as f:
-        readData = f.read()
+    with open(filename) as f2:
+        readData = f2.read()
         items = readData.split('\n')
         
     # If file did not close something went wrong
-    if (not f.closed):
+    if (not f2.closed):
         return -1
     
     """
@@ -76,10 +87,10 @@ def main():
     ei: 100 characters indicating the sensor reading {N, H, T}
     """
     
-    initialPoint = items[0] # Tuple
-    groundCoords = items[1] # Array: Tuple
-    actions = items[2] # Array: String
-    groundSensorReadings = items[3] # Array: String
+    initialPoint = literal_eval(items[0]) # Tuple
+    groundCoords = literal_eval(items[1]) # Array: Tuple
+    actions = literal_eval(items[2]) # Array: String
+    groundSensorReadings = literal_eval(items[3]) # Array: String
     print(groundSensorReadings)
     
     # Imported from generalFilter.py
