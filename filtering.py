@@ -59,7 +59,6 @@ def main():
              ['N', 'N', 'N'],
              ['N', 'B', 'H']]
     
-    # Something wrong in calculation
     def Normalize2D(distribution):
         total = 0
         for line in distribution:
