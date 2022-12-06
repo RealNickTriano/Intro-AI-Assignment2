@@ -1,4 +1,8 @@
 
+n = 100
+filtersDict = {i: None for i in range(n + 1)}
+print(filtersDict)        
+
 def Normalize2D(distribution):
         total = 0
         for line in distribution:
@@ -18,9 +22,14 @@ def Normalize2D(distribution):
     
 def Filter(i, actions, priorDistribution, sensorData, observationModel, TransitionModel, myMap, M, N):
         if (i == 0):
-            return priorDistribution
+            filtersDict[0] = priorDistribution
+            return filtersDict[0]
+        elif (filtersDict[i] is not None):
+            return filtersDict[i]   
+        
         filterRes = Filter(i - 1, actions, priorDistribution, sensorData, observationModel, TransitionModel, myMap, M, N)
-        result = [[] * M] * N # init result map
+        result = [[0] * N for _ in range(M)] # init result map
+        print(len(result))
         for x in range(1, M + 1):
             for y in range(1, N + 1):
                 position = (x, y)
@@ -31,11 +40,16 @@ def Filter(i, actions, priorDistribution, sensorData, observationModel, Transiti
                 for x2 in range(1, M + 1):
                     for y2 in range(1, N + 1):
                         # Issue filter recalculated  everytime we want 1 value
+                        """ print(x2-1, y2-1)
+                        print(len(filterRes)) """
                         transitionVal = TransitionModel((x2, y2), (x, y), actions[i-1]) * filterRes[x2-1][y2-1]
+                        
                         print('Transition Model * Filtering: {}'.format((transitionVal, actions[i-1])))
                         summation += transitionVal
                 print('Summation after iteration: {} : {}'.format(i, summation))
-                result[x - 1].append(pObserve * summation)
+                result[x-1][y-1] = (pObserve * summation)
                 
         res = Normalize2D(result)
+        filtersDict[i] = res
+        print(len(res))
         return res

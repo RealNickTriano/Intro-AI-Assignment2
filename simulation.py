@@ -18,22 +18,22 @@ def TransitionModel(lastPostion, nextPosition, action):
     if (lastPostion == nextPosition):
         return 0.1
     else:
-        if(action == 'up'):
+        if(action == 'U'):
             if(nextPosition[0] == lastPostion[0] - 1 and nextPosition[1] == lastPostion[1]):
                 return 0.9
             else:
                 return 0
-        elif(action == 'down'):
+        elif(action == 'D'):
             if(nextPosition[0] == lastPostion[0] + 1 and nextPosition[1] == lastPostion[1]):
                 return 0.9
             else:
                 return 0
-        elif(action == 'left'):
+        elif(action == 'L'):
             if(nextPosition[1] == lastPostion[1] - 1 and nextPosition[0] == lastPostion[0]):
                 return 0.9
             else:
                 return 0
-        elif(action == 'right'):
+        elif(action == 'R'):
             if(nextPosition[1] == lastPostion[1] + 1 and nextPosition[0] == lastPostion[0]):
                 return 0.9
             else:
@@ -46,7 +46,7 @@ def main():
     print(PATHS_FOLDER)
     
     initialProbability = 1 / (M * N) 
-    priorDistribution = [[initialProbability] * M] * N
+    priorDistribution = [[initialProbability] * N for _ in range(M)]
     
     observationModel = {'N':{'N': 0.9, 'H': 0.05, 'T': 0.05, 'B': 0},
                         'H':{'N': 0.05, 'H': 0.9, 'T': 0.05, 'B': 0},
@@ -94,7 +94,7 @@ def main():
     print(groundSensorReadings)
     
     # Imported from generalFilter.py
-    result = Filter(100, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N)
+    result = Filter(3, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N)
     
     for line in result:
         print(line)
