@@ -1,6 +1,6 @@
 
 #GLOBAL VARIABLES
-
+import time
 
 class Space:
     
@@ -48,6 +48,7 @@ def TransitionModel(lastPostion, nextPosition, action):
 
     
 def main():
+    start_time = time.time()
     possibleActions = ['up, down, left, right']
     possibleTerrainType = ['N', 'H', 'T', 'B']
     observationModel = {'N':{'N': 0.9, 'H': 0.05, 'T': 0.05, 'B': 0},
@@ -93,9 +94,8 @@ def main():
                     [0.125, 0.125, 0.125],
                     [0.125, 0.125, 0.125]]
         filterRes = Filter(i - 1)
-        result = [[],
-                  [],
-                  []]
+        result = [[0] * 3 for _ in range(3)] # init result map
+        print(result)
         for x in range(1,4):
             for y in range(1,4):
                 position = (x, y)
@@ -103,14 +103,48 @@ def main():
                 pObserve = probAtPos[myMap[x-1][y-1]]
                 print('Position Reading : {}\n At Position: {}\nProbability:{}'.format(sensorData[i-1], position, pObserve))
                 summation = 0
-                for x2 in range(1,4):
+                # X2, Y2 IS LAST POSTION IN RELATION TO X, Y GIVEN ACTION a
+                if (actions[i-1] == 'down'):
+                    x2 = x  - 1
+                    y2 = y
+                    x3 = x
+                    y3 = y
+                elif(actions[i-1] == 'up'):
+                    x2 = x + 1
+                    y2 = y 
+                    x3 = x
+                    y3 = y
+                elif (actions[i-1] == 'left'):
+                    x2 = x 
+                    y2 = y + 1
+                    x3 = x
+                    y3 = y
+                elif(actions[i-1] == 'right'):
+                    x2 = x
+                    y2 = y - 1
+                    x3 = x
+                    y3 = y
+                
+                # Issue filter recalculated  everytime we want 1 value
+                if(x2 < 4 and x2 > 0 and y2 < 4 and y2 > 0):
+                    transitionVal = TransitionModel((x2, y2), (x, y), actions[i-1]) * filterRes[x2-1][y2-1]
+                else:
+                    transitionVal = 0
+                print('Transition Model X2 * Filtering: {}'.format((transitionVal, actions[i-1])))
+                transitionValAlt = TransitionModel((x3, y3), (x, y), actions[i-1]) * filterRes[x3-1][y3-1]
+                print('Transition Model X3 * Filtering: {}'.format((transitionValAlt, actions[i-1])))
+                summation += transitionVal + transitionValAlt
+                print('Summation after iteration: {} : {}'.format(i, summation))
+                result[x - 1][y - 1] = pObserve * summation
+                    
+                """ for x2 in range(1,4):
                     for y2 in range(1,4):
                         # Issue filter recalculated  everytime we want 1 value
                         transitionVal = TransitionModel((x2, y2), (x, y), actions[i-1]) * filterRes[x2-1][y2-1]
                         print('Transition Model * Filtering: {}'.format((transitionVal, actions[i-1])))
                         summation += transitionVal
                 print('Summation after iteration: {} : {}'.format(i, summation))
-                result[x - 1].append(pObserve * summation)
+                result[x - 1].append(pObserve * summation) """
                 
         res = Normalize2D(result)
         return res
@@ -120,7 +154,7 @@ def main():
     for line in res:
         print(line)
     
-    
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == "__main__":
     main()

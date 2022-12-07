@@ -1,6 +1,7 @@
 import os
 from generalFilter import *
 from ast import literal_eval
+import math
 
 
 # Folder Path
@@ -94,12 +95,13 @@ def main():
     print(groundSensorReadings)
     
     # Imported from generalFilter.py
-    result = Filter(3, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N)
+    result = Filter(100, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N)
     
     for line in result:
         print(line)
             
     print(len(priorDistribution[0]), len(priorDistribution), priorDistribution[0][0])
+    print(max(map(max, result)))
     return
 
 if __name__ == "__main__":
