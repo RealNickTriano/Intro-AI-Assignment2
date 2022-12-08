@@ -2,7 +2,7 @@ import os
 from generalFilter import *
 from ast import literal_eval
 import math
-
+from tkinter import *
 
 # Folder Path
 CUR_DIR = os.getcwd()
@@ -10,6 +10,30 @@ PATHS_FOLDER = CUR_DIR + '\GroundTruths'
 MAPS_FOLDER = CUR_DIR + '\Maps'
 M = 100
 N = 50
+
+#Tkinter constants
+SIDE_LENGTH = 30
+PADDING_X = 20
+PADDING_Y = 20
+
+# ---------------- TKINTER METHODS ----------------
+def create_square(my_canvas, number, i, k):
+    center = ((k * (SIDE_LENGTH)) + PADDING_X, (i * (SIDE_LENGTH)) + PADDING_Y)
+    print(center)
+    x1 = center[0] - (SIDE_LENGTH / 2)
+    y1 = center[1] - (SIDE_LENGTH / 2)
+    x2 = center[0] + (SIDE_LENGTH / 2)
+    y2 = center[1] + (SIDE_LENGTH / 2)
+    colorPicks = []
+    if (number < 0.2):
+        color = 'red'
+    else:
+        color = 'green'
+    my_canvas.create_rectangle(x1, y1, x2, y2, outline = "black", fill=color, width = 2)
+    
+    return
+
+
 
 # Params: lastPostion Tuple(x, y), nextPosition Tuple(x, y), action = String
 # return: P(X_i | X_{i-1}) according to transition model
@@ -45,6 +69,22 @@ def TransitionModel(lastPostion, nextPosition, action):
 
 def main():
     print(PATHS_FOLDER)
+    
+    root = Tk()
+    root.title('Codemy.com -  Canvas')
+    root.geometry("1920x1080")
+    root.wm_attributes("-transparentcolor", 'grey')
+
+    my_canvas = Canvas(root, width=1920, height=1080, bg="white")
+    my_canvas.pack(pady=20)
+           
+    def _on_mousewheel(event):
+        if event.delta < 0:
+            my_canvas.yview_scroll(1, "units")
+        else:
+            my_canvas.yview_scroll(-1, "units")
+
+    root.bind("<MouseWheel>", _on_mousewheel)
     
     initialProbability = 1 / (M * N) 
     priorDistribution = [[initialProbability] * N for _ in range(M)]
@@ -102,6 +142,13 @@ def main():
             
     print(len(priorDistribution[0]), len(priorDistribution), priorDistribution[0][0])
     print(max(map(max, result)))
+    
+    for i in range(M):
+        for k in range(N):
+            create_square(my_canvas, result[i][k], i, k)
+    
+    root.mainloop()
+    
     return
 
 if __name__ == "__main__":
