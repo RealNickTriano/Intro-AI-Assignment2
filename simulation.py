@@ -184,6 +184,8 @@ def Filter(i, actions, priorDistribution, sensorData, observationModel, Transiti
 
 #TODO
 def FilterWithFile(fileName, iteration, my_canvas, speed):
+    global filtersDict
+    filtersDict = {i: None for i in range(n + 1)}
     splits = fileName.split('path')
     print()
     myFile = MAPS_FOLDER + '\\' + splits[0] + '.txt'
@@ -258,6 +260,7 @@ def main():
             print('Select a File to proceed.')
             return
         FilterWithFile(fileToDisplay, int(iterationSelect.get()), my_canvas, int(speedSelect.get()))
+        return
         
     files = os.listdir(PATHS_FOLDER)
     
