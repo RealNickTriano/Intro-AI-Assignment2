@@ -5,6 +5,7 @@ from ast import literal_eval
 import math
 from tkinter import *
 import time
+from numpy import argmax
 
 # Folder Path
 CUR_DIR = os.getcwd()
@@ -14,7 +15,7 @@ M = 100
 N = 50
 
 #Tkinter constants
-SIDE_LENGTH = 30
+SIDE_LENGTH = 20
 PADDING_X = 20
 PADDING_Y = 20
 
@@ -72,7 +73,7 @@ def updateSquare(my_canvas, number, i, k):
 # Params: lastPostion Tuple(x, y), nextPosition Tuple(x, y), action = String
 # return: P(X_i | X_{i-1}) according to transition model
 def TransitionModel(lastPostion, nextPosition, action):
-    print('Evaluating with Transition Model: lastPos: {}, nextPos: {}, action: {}'.format(lastPostion, nextPosition, action))
+    #print('Evaluating with Transition Model: lastPos: {}, nextPos: {}, action: {}'.format(lastPostion, nextPosition, action))
     
     if (lastPostion == nextPosition):
         return 0.1
@@ -119,22 +120,22 @@ def Normalize2D(distribution):
         
         return normDist
     
-def Filter(i, actions, priorDistribution, sensorData, observationModel, TransitionModel, myMap, M, N, my_canvas, speed):
+def Filter(i, actions, priorDistribution, sensorData, observationModel, TransitionModel, myMap, M, N, my_canvas, speed, groundCoords, collectData):
         if (i == 0):
             filtersDict[0] = priorDistribution
             return filtersDict[0]
         elif (filtersDict[i] is not None):
             return filtersDict[i]   
         
-        filterRes = Filter(i - 1, actions, priorDistribution, sensorData, observationModel, TransitionModel, myMap, M, N, my_canvas, speed)
+        filterRes = Filter(i - 1, actions, priorDistribution, sensorData, observationModel, TransitionModel, myMap, M, N, my_canvas, speed, groundCoords, collectData)
         result = [[0] * N for _ in range(M)] # init result map
-        print(len(result))
+        #print(len(result))
         for x in range(1, M + 1):
             for y in range(1, N + 1):
                 position = (x, y)
                 probAtPos = observationModel[sensorData[i-1]]
                 pObserve = probAtPos[myMap[x-1][y-1]]
-                print('Position Reading : {}\n At Position: {}\nProbability:{}'.format(sensorData[i-1], position, pObserve))
+                #print('Position Reading : {}\n At Position: {}\nProbability:{}'.format(sensorData[i-1], position, pObserve))
                 summation = 0
                 # X2, Y2 IS LAST POSTION IN RELATION TO X, Y GIVEN ACTION a
                 if (actions[i-1] == 'D'):
@@ -159,24 +160,32 @@ def Filter(i, actions, priorDistribution, sensorData, observationModel, Transiti
                     y3 = y
                 
                 # Issue filter recalculated  everytime we want 1 value
-                if(x2 < 4 and x2 > 0 and y2 < 4 and y2 > 0):
+                if(x2 < M and x2 > 0 and y2 < N and y2 > 0):
                     transitionVal = TransitionModel((x2, y2), (x, y), actions[i-1]) * filterRes[x2-1][y2-1]
                 else:
                     transitionVal = 0
-                print('Transition Model X2 * Filtering: {}'.format((transitionVal, actions[i-1])))
+                #print('Transition Model X2 * Filtering: {}'.format((transitionVal, actions[i-1])))
                 transitionValAlt = TransitionModel((x3, y3), (x, y), actions[i-1]) * filterRes[x3-1][y3-1]
-                print('Transition Model X3 * Filtering: {}'.format((transitionValAlt, actions[i-1])))
+                #print('Transition Model X3 * Filtering: {}'.format((transitionValAlt, actions[i-1])))
                 summation += transitionVal + transitionValAlt
-                print('Summation after iteration: {} : {}'.format(i, summation))
+                #print('Summation after iteration: {} : {}'.format(i, summation))
                 result[x - 1][y - 1] = pObserve * summation
                 
         res = Normalize2D(result)
         filtersDict[i] = res
-        for i in range(M):
+        for q in range(M):
             for k in range(N):
-                updateSquare(my_canvas, res[i][k], i, k)
+                updateSquare(my_canvas, res[q][k], q, k)
+        tag = '({},{})'.format(groundCoords[i - 1][0], groundCoords[i - 1][1])
+        my_canvas.itemconfigure(tag, fill='green')
         root.update_idletasks()
         root.update()
+        maxi = max(map(max, res))
+        print('Max: {}'.format(maxi))
+        for j in range(M):
+            for q in range(N):
+                if(res[j][q] == maxi):
+                    print('Pos: {}, {}'.format(j, q))
         time.sleep(speed)
         print(len(res))
         return res
@@ -224,10 +233,15 @@ def FilterWithFile(fileName, iteration, my_canvas, speed):
     groundSensorReadings = literal_eval(items[3]) # Array: String
     print(groundSensorReadings)
     
-    result = Filter(iteration, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N, my_canvas, speed)
+    result = Filter(iteration, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N, my_canvas, speed, groundCoords, False)
     
     print(len(priorDistribution[0]), len(priorDistribution), priorDistribution[0][0])
-    print(max(map(max, result)))
+    maxi = max(map(max, result))
+    print(maxi)
+    for j in range(M):
+        for q in range(N):
+            if(result[j][q] == maxi):
+                print(j, q)
     
     return
 
@@ -245,7 +259,6 @@ def main():
 
     root.bind("<MouseWheel>", _on_mousewheel)
     
-    #TODO Show map at iteration number
     def _on_filterbutton():
         iterations = int(iterationSelect.get())
         if (iterations not in range(1, 101)):
@@ -260,6 +273,12 @@ def main():
             print('Select a File to proceed.')
             return
         FilterWithFile(fileToDisplay, int(iterationSelect.get()), my_canvas, int(speedSelect.get()))
+        return
+    
+    def _on_experiment():
+        print('Running 100 Experiments. Its gonna be a while')
+        # collectData = Flag to start collecting error estimates and stuff
+        #TODO
         return
         
     files = os.listdir(PATHS_FOLDER)
@@ -287,6 +306,9 @@ def main():
     iterationSelectLabel = Label(my_canvas, text='Select Iteration', bg='white')
     iterationSelectLabel.place(relx=0.82, rely=0.1, anchor=CENTER)
     pathSelectLabel.place(relx=0.82, rely=0.15, anchor=CENTER)
+    
+    experimentButton = Button(my_canvas, justify=CENTER, text='Run Experiment', command=_on_experiment)
+    experimentButton.place(relx=0.90, rely=0.25, anchor=CENTER)
     
     
             
