@@ -1,8 +1,10 @@
 import os
-from generalFilter import *
+from tkinter.ttk import Combobox
+#from generalFilter import *
 from ast import literal_eval
 import math
 from tkinter import *
+import time
 
 # Folder Path
 CUR_DIR = os.getcwd()
@@ -16,24 +18,56 @@ SIDE_LENGTH = 30
 PADDING_X = 20
 PADDING_Y = 20
 
+# Globals for filtering
+n = 100
+filtersDict = {i: None for i in range(n + 1)}
+
+root = Tk()
+root.title('Codemy.com -  Canvas')
+root.geometry("1920x1080")
+    
 # ---------------- TKINTER METHODS ----------------
 def create_square(my_canvas, number, i, k):
     center = ((k * (SIDE_LENGTH)) + PADDING_X, (i * (SIDE_LENGTH)) + PADDING_Y)
-    print(center)
     x1 = center[0] - (SIDE_LENGTH / 2)
     y1 = center[1] - (SIDE_LENGTH / 2)
     x2 = center[0] + (SIDE_LENGTH / 2)
     y2 = center[1] + (SIDE_LENGTH / 2)
-    colorPicks = []
-    if (number < 0.2):
-        color = 'red'
-    else:
-        color = 'green'
-    my_canvas.create_rectangle(x1, y1, x2, y2, outline = "black", fill=color, width = 2)
     
+    my_canvas.create_rectangle(x1, y1, x2, y2, outline = "black", fill='#fef2f2', width = 2, tags='({},{})'.format(i, k))
     return
 
-
+def updateSquare(my_canvas, number, i, k):
+    colorPicks = ['#fef2f2', '#fee2e2', '#fecaca', '#fca5a5', '#f87171', '#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#7f1d1d', '#c2410c']
+    if (number < 0.0002):
+        color = 'white'
+    elif (number < 0.025):
+        color = colorPicks[0]
+    elif (number < 0.05):
+        color = colorPicks[1]
+    elif (number < 0.075):
+        color = colorPicks[2]
+    elif (number < 0.1):
+        color = colorPicks[3]
+    elif (number < 0.15):
+        color = colorPicks[4]
+    elif (number < 0.175):
+        color = colorPicks[5]
+    elif (number < 0.2):
+        color = colorPicks[6]
+    elif (number < 0.3):
+        color = colorPicks[7]
+    elif (number < 0.4):
+        color = colorPicks[8]
+    elif (number < 0.5):
+        color = colorPicks[9]
+    else:
+        color = colorPicks[10]
+        
+    tag = '({},{})'.format(i, k)
+    my_canvas.itemconfigure(tag, fill=color)
+    return
+# -----------------------------------------------------------------
 
 # Params: lastPostion Tuple(x, y), nextPosition Tuple(x, y), action = String
 # return: P(X_i | X_{i-1}) according to transition model
@@ -67,13 +101,136 @@ def TransitionModel(lastPostion, nextPosition, action):
             print('Unknown Action!')
     return -1
 
+# ---------------- FILTERING ----------------------
+def Normalize2D(distribution):
+        total = 0
+        for line in distribution:
+            total += sum(line)
+        alpha = 1 / total
+        print('total: {}'.format(total))
+        
+        normDist = []
+        for line in distribution:
+            newLine = []
+            for value in line:
+                newVal = alpha * value
+                newLine.append(newVal)
+            normDist.append(newLine)  
+        
+        return normDist
+    
+def Filter(i, actions, priorDistribution, sensorData, observationModel, TransitionModel, myMap, M, N, my_canvas, speed):
+        if (i == 0):
+            filtersDict[0] = priorDistribution
+            return filtersDict[0]
+        elif (filtersDict[i] is not None):
+            return filtersDict[i]   
+        
+        filterRes = Filter(i - 1, actions, priorDistribution, sensorData, observationModel, TransitionModel, myMap, M, N, my_canvas, speed)
+        result = [[0] * N for _ in range(M)] # init result map
+        print(len(result))
+        for x in range(1, M + 1):
+            for y in range(1, N + 1):
+                position = (x, y)
+                probAtPos = observationModel[sensorData[i-1]]
+                pObserve = probAtPos[myMap[x-1][y-1]]
+                print('Position Reading : {}\n At Position: {}\nProbability:{}'.format(sensorData[i-1], position, pObserve))
+                summation = 0
+                # X2, Y2 IS LAST POSTION IN RELATION TO X, Y GIVEN ACTION a
+                if (actions[i-1] == 'D'):
+                    x2 = x  - 1
+                    y2 = y
+                    x3 = x
+                    y3 = y
+                elif(actions[i-1] == 'U'):
+                    x2 = x + 1
+                    y2 = y 
+                    x3 = x
+                    y3 = y
+                elif (actions[i-1] == 'L'):
+                    x2 = x 
+                    y2 = y + 1
+                    x3 = x
+                    y3 = y
+                elif(actions[i-1] == 'R'):
+                    x2 = x
+                    y2 = y - 1
+                    x3 = x
+                    y3 = y
+                
+                # Issue filter recalculated  everytime we want 1 value
+                if(x2 < 4 and x2 > 0 and y2 < 4 and y2 > 0):
+                    transitionVal = TransitionModel((x2, y2), (x, y), actions[i-1]) * filterRes[x2-1][y2-1]
+                else:
+                    transitionVal = 0
+                print('Transition Model X2 * Filtering: {}'.format((transitionVal, actions[i-1])))
+                transitionValAlt = TransitionModel((x3, y3), (x, y), actions[i-1]) * filterRes[x3-1][y3-1]
+                print('Transition Model X3 * Filtering: {}'.format((transitionValAlt, actions[i-1])))
+                summation += transitionVal + transitionValAlt
+                print('Summation after iteration: {} : {}'.format(i, summation))
+                result[x - 1][y - 1] = pObserve * summation
+                
+        res = Normalize2D(result)
+        filtersDict[i] = res
+        for i in range(M):
+            for k in range(N):
+                updateSquare(my_canvas, res[i][k], i, k)
+        root.update_idletasks()
+        root.update()
+        time.sleep(speed)
+        print(len(res))
+        return res
+# -------------------------------------------------
+
+#TODO
+def FilterWithFile(fileName, iteration, my_canvas, speed):
+    splits = fileName.split('path')
+    print()
+    myFile = MAPS_FOLDER + '\\' + splits[0] + '.txt'
+    items = []
+    with open(myFile, 'r') as f1:
+        readData = f1.read()
+        
+    # If file did not close something went wrong
+    if (not f1.closed):
+        return -1
+    
+    myMap = literal_eval(readData)
+    
+    # Loop 10 times for each path
+    #for k in range(10):
+    myFile = PATHS_FOLDER + '\\' + fileName
+    # Load ground truth file
+    with open(myFile) as f2:
+        readData = f2.read()
+        items = readData.split('\n')
+        
+    # If file did not close something went wrong
+    if (not f2.closed):
+        return -1
+    
+    initialProbability = 1 / (M * N) 
+    priorDistribution = [[initialProbability] * N for _ in range(M)]
+    
+    observationModel = {'N':{'N': 0.9, 'H': 0.05, 'T': 0.05, 'B': 0},
+                        'H':{'N': 0.05, 'H': 0.9, 'T': 0.05, 'B': 0},
+                        'T':{'N': 0.05, 'H': 0.05, 'T': 0.9, 'B': 0}}
+                        
+    initialPoint = literal_eval(items[0]) # Tuple
+    groundCoords = literal_eval(items[1]) # Array: Tuple
+    actions = literal_eval(items[2]) # Array: String
+    groundSensorReadings = literal_eval(items[3]) # Array: String
+    print(groundSensorReadings)
+    
+    result = Filter(iteration, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N, my_canvas, speed)
+    
+    print(len(priorDistribution[0]), len(priorDistribution), priorDistribution[0][0])
+    print(max(map(max, result)))
+    
+    return
+
 def main():
     print(PATHS_FOLDER)
-    
-    root = Tk()
-    root.title('Codemy.com -  Canvas')
-    root.geometry("1920x1080")
-    root.wm_attributes("-transparentcolor", 'grey')
 
     my_canvas = Canvas(root, width=1920, height=1080, bg="white")
     my_canvas.pack(pady=20)
@@ -86,38 +243,54 @@ def main():
 
     root.bind("<MouseWheel>", _on_mousewheel)
     
-    initialProbability = 1 / (M * N) 
-    priorDistribution = [[initialProbability] * N for _ in range(M)]
+    #TODO Show map at iteration number
+    def _on_filterbutton():
+        iterations = int(iterationSelect.get())
+        if (iterations not in range(1, 101)):
+            print('Number should be 1-100')
+            return
+        print(iterations)
+        return
     
-    observationModel = {'N':{'N': 0.9, 'H': 0.05, 'T': 0.05, 'B': 0},
-                        'H':{'N': 0.05, 'H': 0.9, 'T': 0.05, 'B': 0},
-                        'T':{'N': 0.05, 'H': 0.05, 'T': 0.9, 'B': 0}}
+    def _on_mapbutton():
+        fileToDisplay = mapPathSelection.get()
+        if (fileToDisplay == ''):
+            print('Select a File to proceed.')
+            return
+        FilterWithFile(fileToDisplay, int(iterationSelect.get()), my_canvas, int(speedSelect.get()))
+        
+    files = os.listdir(PATHS_FOLDER)
+    
+    iterationSelect = Spinbox(my_canvas, justify="left",from_=1, to=100)
+    iterationSelect.place(relx=0.9, rely=0.1, anchor=CENTER)
+    
+    filterButton = Button(my_canvas, justify=CENTER, text='Filter', command=_on_filterbutton)
+    filterButton.place(relx=0.95, rely=0.1, anchor=CENTER)
+    
+    
+    mapPathSelection = Combobox(my_canvas, justify='left', text='Filter', values=files)
+    mapPathSelection.place(relx=0.90, rely=0.15, anchor=CENTER)
+    
+    filterButton = Button(my_canvas, justify=CENTER, text='Load Map', command=_on_mapbutton)
+    filterButton.place(relx=0.96, rely=0.15, anchor=CENTER)
+    
+    speedSelectLabel = Label(my_canvas, text='Select time between steps', bg='white')
+    speedSelectLabel.place(relx=0.83, rely=0.2, anchor=CENTER)
+    
+    speedSelect = Spinbox(my_canvas, justify="left",from_=0, to=5)
+    speedSelect.place(relx=0.92, rely=0.2, anchor=CENTER)
+    
+    pathSelectLabel = Label(my_canvas, text='Select Map/Path', bg='white')
+    iterationSelectLabel = Label(my_canvas, text='Select Iteration', bg='white')
+    iterationSelectLabel.place(relx=0.82, rely=0.1, anchor=CENTER)
+    pathSelectLabel.place(relx=0.82, rely=0.15, anchor=CENTER)
+    
+    
             
     # Loop 10 times for each map
     #for i in range(10):
     # Load map from file: 2D array of H, N, T, B strings
-    filename = MAPS_FOLDER + '\map_' + str(1) + '.txt'
-    items = []
-    with open(filename, 'r') as f1:
-        readData = f1.read()
-        
-    # If file did not close something went wrong
-    if (not f1.closed):
-        return -1
     
-    myMap = literal_eval(readData)
-    
-    # Loop 10 times for each path
-    #for k in range(10):
-    filename = PATHS_FOLDER + '\map_' + str(1) + 'path_' + str(1) + '.txt'
-    # Load ground truth file
-    with open(filename) as f2:
-        readData = f2.read()
-        items = readData.split('\n')
-        
-    # If file did not close something went wrong
-    if (not f2.closed):
-        return -1
     
     """
     (x0, y0): coordinates of initial point (Tuple)
@@ -128,24 +301,23 @@ def main():
     ei: 100 characters indicating the sensor reading {N, H, T}
     """
     
-    initialPoint = literal_eval(items[0]) # Tuple
-    groundCoords = literal_eval(items[1]) # Array: Tuple
-    actions = literal_eval(items[2]) # Array: String
-    groundSensorReadings = literal_eval(items[3]) # Array: String
-    print(groundSensorReadings)
-    
-    # Imported from generalFilter.py
-    result = Filter(100, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N)
-    
-    for line in result:
-        print(line)
-            
-    print(len(priorDistribution[0]), len(priorDistribution), priorDistribution[0][0])
-    print(max(map(max, result)))
-    
+    # Draw Grid
     for i in range(M):
         for k in range(N):
-            create_square(my_canvas, result[i][k], i, k)
+            create_square(my_canvas, 0, i, k)
+            
+    """  """
+    
+    # Imported from generalFilter.py
+    
+    
+    """ for line in result:
+        print(line)
+            
+     """
+    
+     
+    
     
     root.mainloop()
     
