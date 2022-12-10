@@ -6,6 +6,7 @@ import math
 from tkinter import *
 import time
 from numpy import argmax
+import random
 
 # Folder Path
 CUR_DIR = os.getcwd()
@@ -23,8 +24,13 @@ PADDING_Y = 20
 n = 100
 filtersDict = {i: None for i in range(n + 1)}
 
+# Globals for experiments
+correctEstimationsArray = [] # Array containing arrays of 0s and 1s for each file
+correctTotalsArray = [] # Array containing int for total correct guesses by filtering
+errorsArray = []
+
 root = Tk()
-root.title('Codemy.com -  Canvas')
+root.title('Filtering Visualization')
 root.geometry("1920x1080")
     
 # ---------------- TKINTER METHODS ----------------
@@ -192,7 +198,7 @@ def Filter(i, actions, priorDistribution, sensorData, observationModel, Transiti
 # -------------------------------------------------
 
 #TODO
-def FilterWithFile(fileName, iteration, my_canvas, speed):
+def FilterWithFile(fileName, iteration, my_canvas, speed, collectData):
     global filtersDict
     filtersDict = {i: None for i in range(n + 1)}
     splits = fileName.split('path')
@@ -233,15 +239,62 @@ def FilterWithFile(fileName, iteration, my_canvas, speed):
     groundSensorReadings = literal_eval(items[3]) # Array: String
     print(groundSensorReadings)
     
-    result = Filter(iteration, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N, my_canvas, speed, groundCoords, False)
+    result = Filter(iteration, actions, priorDistribution, groundSensorReadings, observationModel, TransitionModel, myMap, M, N, my_canvas, speed, groundCoords, collectData)
     
     print(len(priorDistribution[0]), len(priorDistribution), priorDistribution[0][0])
     maxi = max(map(max, result))
+    maxiIndex = (0, 0)
     print(maxi)
-    for j in range(M):
+    """ for j in range(M):
         for q in range(N):
             if(result[j][q] == maxi):
-                print(j, q)
+                maxiIndex = (j, q)
+                print(j, q) """
+    
+    # Experiment Data collection
+    if (collectData):
+        # track distance from truth to guess at each iteration
+        # track when guess is equal to ground truth at each iteration
+        correctEstimate = 0
+        correctionArray = []
+        currErrors = []
+        print('Collecting Data')
+        for iter in range(6, iteration + 1):
+            maxArray = []
+            # Find max in result
+            maxRes = max(map(max, filtersDict[iter]))
+            for j in range(M):
+                for q in range(N):
+                    if(filtersDict[iter][j][q] == maxRes):
+                        maxArray.append((j, q))
+            # Get ground truth at iter
+            truthPos = groundCoords[iter - 1]
+            maxiResPos = random.choice(maxArray)
+            # Compute distance
+            distX = abs(truthPos[0] - maxiResPos[0])
+            distY = abs(truthPos[1] - maxiResPos[1])
+            error = math.sqrt(math.pow(distX, 2) + math.pow(distY, 2)) # Error = straight line distance
+            print(error)
+            currErrors.append(error)
+            # If equal increase counter
+            print('Truth: {}'.format(truthPos))
+            print('Estimate: {}'.format(maxiResPos))
+            if (truthPos == maxiResPos):
+                correctEstimate += 1
+                correctionArray.append(1)
+            else:
+                correctionArray.append(0) 
+            # Else continue 
+        # Calculate     
+        correctEstimationsArray.append(correctionArray)
+        correctTotalsArray.append(correctEstimate)
+        errorsArray.append(currErrors)
+        print('Correct Estimations By Iteration:')
+        print(correctEstimationsArray)
+        print('Correct Estimation Totals:')
+        print(correctTotalsArray)
+        print('All Errors:')
+        print(errorsArray)
     
     return
 
@@ -272,13 +325,37 @@ def main():
         if (fileToDisplay == ''):
             print('Select a File to proceed.')
             return
-        FilterWithFile(fileToDisplay, int(iterationSelect.get()), my_canvas, int(speedSelect.get()))
+        FilterWithFile(fileToDisplay, int(iterationSelect.get()), my_canvas, int(speedSelect.get()), False)
         return
     
     def _on_experiment():
-        print('Running 100 Experiments. Its gonna be a while')
+        print('Running 100 Experiments. Its gonna be a while.')
         # collectData = Flag to start collecting error estimates and stuff
-        #TODO
+        # What do we need to keep track off?
+        """
+            1) For each file, compute error, as 
+                distance in grid world between true 
+                location and maxi value at each iteration (ties broken randomly)
+            2) For each file, keep track of when maxi cell is actual cell,
+                at each iteration
+        """
+        fileToDisplay = mapPathSelection.get()
+        if (fileToDisplay == ''):
+            print('Select a File to proceed.')
+            return
+        FilterWithFile(fileToDisplay, int(iterationSelect.get()), my_canvas, int(speedSelect.get()), True)
+        # After we get all values filled in array
+        # For correctEstimationsArray sum all values of the same iteration
+            # totals = []
+            # For each line in correctEstimationsArray:
+                # totals.append(totals[i] += line[0])Sum line[0]
+            # Take average so, for each in totals, totals[i] / 100
+                
+        # For correctTotalsArray
+            # Sum all and average
+            
+        # For errorsArray
+            # Do same as correctEstimationsArray
         return
         
     files = os.listdir(PATHS_FOLDER)
