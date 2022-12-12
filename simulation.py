@@ -7,6 +7,7 @@ from tkinter import *
 import time
 from numpy import argmax
 import random
+import csv
 
 # Folder Path
 CUR_DIR = os.getcwd()
@@ -259,7 +260,7 @@ def FilterWithFile(fileName, iteration, my_canvas, speed, collectData):
         correctionArray = []
         currErrors = []
         print('Collecting Data')
-        for iter in range(6, iteration + 1):
+        for iter in range(0, iteration + 1):
             maxArray = []
             # Find max in result
             maxRes = max(map(max, filtersDict[iter]))
@@ -339,23 +340,50 @@ def main():
             2) For each file, keep track of when maxi cell is actual cell,
                 at each iteration
         """
-        fileToDisplay = mapPathSelection.get()
+        """ fileToDisplay = mapPathSelection.get()
         if (fileToDisplay == ''):
             print('Select a File to proceed.')
-            return
-        FilterWithFile(fileToDisplay, int(iterationSelect.get()), my_canvas, int(speedSelect.get()), True)
-        # After we get all values filled in array
-        # For correctEstimationsArray sum all values of the same iteration
-            # totals = []
-            # For each line in correctEstimationsArray:
-                # totals.append(totals[i] += line[0])Sum line[0]
-            # Take average so, for each in totals, totals[i] / 100
-                
-        # For correctTotalsArray
-            # Sum all and average
+            return """
+        myFilesArray = os.listdir(PATHS_FOLDER)
+        for file in myFilesArray:
+            FilterWithFile(file, int(iterationSelect.get()), my_canvas, int(speedSelect.get()), True)
             
-        # For errorsArray
-            # Do same as correctEstimationsArray
+        # After we get all values filled in array
+        averagesArray = [0] * 101
+        for array in correctEstimationsArray:
+            print(len(array))
+            for index in range(len(array)):
+                averagesArray[index] += array[index]
+        # Average the values
+        newAverages = list(map(lambda x: x / 101, averagesArray))
+        print(newAverages)
+        # newAverages is an array containing average distance between ground truth and estimation and each iteration
+                
+        #errorsArray
+        averagesErrorArray = [0] * 101
+        for array in errorsArray:
+            for index in range(len(array)):
+                averagesErrorArray[index] += array[index]
+        # Average the values
+        newErrorAverages = list(map(lambda x: x / 101, averagesErrorArray))
+        print(newErrorAverages)
+        
+        fields = ['Correct Estimation', 'Iteration', 'Distance Error']
+        
+        rows = []
+        iterations = list(range(0, 101))
+        
+        for item in iterations:
+            rows.append([newAverages[item], item, newErrorAverages[item]])
+            
+        filename = 'experiment_results.csv'
+        
+        with open(filename, 'w') as csvfile: 
+            csvwriter = csv.writer(csvfile) 
+                
+            csvwriter.writerow(fields) 
+                
+            csvwriter.writerows(rows)
         return
         
     files = os.listdir(PATHS_FOLDER)
