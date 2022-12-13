@@ -30,6 +30,14 @@ Nicholas Triano, Will Keleher
 
         6) Click Load map and the simulation will run.
             You can scroll with scroll wheel while it's running to view more of the map.
+        
+        Note: You can change the size of the grid with the following constants at the
+            top of the file.
+
+            #Tkinter constants
+            SIDE_LENGTH = 20
+            PADDING_X = 20
+            PADDING_Y = 20
 
 
 # ValueIterationMDP.py #
