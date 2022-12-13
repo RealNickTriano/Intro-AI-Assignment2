@@ -1,5 +1,10 @@
+
+
+
 states=["s1","s2","s3","s4"]
+
 actions=["a1","a2","a3","a4"]
+
 transitionProb={
     's1': {
         'a1': {'s1': 0.2, 's2': 0.8},
@@ -33,53 +38,43 @@ stateVal=[0,0,1,0]
 
 while True:
     largestDiff=0
+    vkplus1StateVal=[0,0,0,0]
     for i in range(len(states)):
         stateholder=states[i]
-        val=0
-        bestaction=[0,0]
+        newReward = 0
+        bestaction=[0, 0, 0, 0]
         actioncount=0
+        p=0
         for j in range(len(actions)):
             actionholder=actions[j]
+            val1 = 0
             if actionholder in transitionProb[stateholder]:
                 for k in range(len(states)):
                     nextstateholder=states[k]
-                    if actionholder in transitionProb[stateholder] and nextstateholder in transitionProb[stateholder][actionholder]:                   
+                    if nextstateholder in transitionProb[stateholder][actionholder]:
                         #the problem is here, its adding values from both actions and not just both outcomes
                         #from 1 action
                         #potential solution, a tuple containing both actions respective outcomes and 
                         #taking max on it
+                        #s1,a1,s1 .2   s1,a1,s2 .6
+                        "s1->s2+s1->s1" "s1->s4+s1->s4"
                         utility=gama*stateVal[k]*transitionProb[stateholder][actionholder][nextstateholder]
-                        val+=utility
-                bestaction[actioncount]=val
-                actioncount+=1
-            
-        test=max(bestaction)
-        print(test)
-        val+=rewards[i]
-        diff=abs(stateVal[i]-val)
-        largestDiff=max(largestDiff,diff)
-        stateVal[i]=val
+                        val1 += utility
+                bestaction[j] = val1
+                
+
+
+        best = max(bestaction)
+        print(best)
+        bestpolly=bestaction.index(best)
+        print("for state" , states[i], "best policy is", actions[bestpolly])
+        newReward =  best + rewards[i]
+        diff = abs(stateVal[i] - newReward)
+        largestDiff = max(largestDiff,diff)
+        stateVal[i] = newReward
         print(stateVal)
     if largestDiff<=convergencediff:
         break
-print(stateVal)
+print("the final utilities are",stateVal, "and the best policy is", )
 
-for i in range(len(states)):
-    stateholder=states[i]
-    utilities=[]
-    for j in range(len(actions)):
-        actionholder=actions[j]
-        newutilityshort=0
-        for k in range(len(states)):
-                nextstateholder=states[k]
-                if actionholder in transitionProb[stateholder] and nextstateholder in transitionProb[stateholder][actionholder]:
-                    newutilityshort=newutilityshort+transitionProb[stateholder][actionholder][nextstateholder]*rewards[k]
-        newutilitylong=0    
-        for j in range(len(states)):
-                nextstateholder=states[j]
-                if actionholder in transitionProb[stateholder] and nextstateholder in transitionProb[stateholder][actionholder]:
-                    newutilitylong=newutilitylong+transitionProb[stateholder][actionholder][nextstateholder]*stateVal[j]
-        utilityofnextstate= gama*newutilitylong+newutilityshort
-        utilities.append(utilityofnextstate)
-        
 
