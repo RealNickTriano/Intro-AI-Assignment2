@@ -1,4 +1,4 @@
-
+import time
 
 
 states=["s1","s2","s3","s4"]
@@ -35,8 +35,12 @@ gama=.1
 convergencediff=0.00001
 
 stateVal=[0,0,1,0]
-print(stateVal)
+print('0)', stateVal)
+print('')
+startTime = time.time()
+iterations = 0
 while True:
+    iterations += 1
     vkplus1StateVal=[0,0,0,0]
     for i in range(len(states)):
         stateholder=states[i]
@@ -64,7 +68,7 @@ while True:
 
 
         best = max(bestaction)
-        print(best)
+        #print(best)
         vkplus1StateVal[i] = best
         bestpolly=bestaction.index(best)
         print("for state" , states[i], "best policy is", actions[bestpolly])
@@ -75,10 +79,13 @@ while True:
         diff = abs(stateVal[q] - vkplus1StateVal[q])
         largestDiff = max(largestDiff,diff)
     stateVal = vkplus1StateVal
-    print(stateVal)
+    print(iterations,')',stateVal)
+    print('')
     if largestDiff <= convergencediff:
         break
     
-print("the final utilities are",stateVal, "and the best policy is", )
+print("The final utilities are", stateVal)
+print('Iterations: {}'.format(iterations))
+print('Time: {}'.format(time.time() - startTime))
 
 
