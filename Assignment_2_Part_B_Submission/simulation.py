@@ -11,8 +11,8 @@ import csv
 
 # Folder Path
 CUR_DIR = os.getcwd()
-PATHS_FOLDER = CUR_DIR + '\GroundTruths'
-MAPS_FOLDER = CUR_DIR + '\Maps'
+PATHS_FOLDER = CUR_DIR + '/GroundTruths'
+MAPS_FOLDER = CUR_DIR + '/Maps'
 M = 100
 N = 50
 
@@ -204,7 +204,7 @@ def FilterWithFile(fileName, iteration, my_canvas, speed, collectData):
     filtersDict = {i: None for i in range(n + 1)}
     splits = fileName.split('path')
     print()
-    myFile = MAPS_FOLDER + '\\' + splits[0] + '.txt'
+    myFile = MAPS_FOLDER + '/' + splits[0] + '.txt'
     items = []
     with open(myFile, 'r') as f1:
         readData = f1.read()
@@ -217,7 +217,7 @@ def FilterWithFile(fileName, iteration, my_canvas, speed, collectData):
     
     # Loop 10 times for each path
     #for k in range(10):
-    myFile = PATHS_FOLDER + '\\' + fileName
+    myFile = PATHS_FOLDER + '/' + fileName
     # Load ground truth file
     with open(myFile) as f2:
         readData = f2.read()
